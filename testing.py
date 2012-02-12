@@ -1,5 +1,6 @@
 import classes
 
+
 q_line = 'Q) EGTT/QAZCA/IV/NBO/AE/000/030/5212N00137W005'
 f_line = ''
 g_line = ''
@@ -14,8 +15,7 @@ document_open = True
 # placemark_name = raw_input()
 placemark_name = 'Test Placemark'
 # placemark_description = raw_input()
-placemark_description = 'The placemarks generated during \
-the testing on different NOTAMs.'
+placemark_description = 'The placemarks generated during the testing on different NOTAMs.'
 placemark_visibility = True
 
 poly_style_id = 'Restricted_Aerodrome'
@@ -105,8 +105,7 @@ kml_file.set_file_location(file_location)
 kml_file.set_width_constant(width_constant)
 kml_file.set_indent_width(indent_width)
 
-kml_file.create_kml_source(document, poly_style, placemark, latitude, \
-longitude, look_at, point_polygon, deg_dec)
+kml_file.create_kml_source(document, poly_style, placemark, latitude, longitude, look_at, point_polygon, deg_dec)
 
 # debug_file = raw_input()
 debug_file_name = 'debug.txt'
