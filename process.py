@@ -6,6 +6,7 @@ import classes
 
 def validate(source):
     regex = re.compile('<.*>Q\) EG(PX|TT)/Q(A[^0-9a-zBGIJKMQSWY]|C[AEGLMPRST]|F[^0-9a-zEIJKNQRVXY]|I[DGILMOSTUWXY]|L[^0-9a-zGNOQU]|M[^0-9a-zEFIJLOQVYZ]|N[ABCDFLMNOTVX]|O[ABELR]|P[^0-9a-zBCEGJKNQSVWY]|R[ADOPRT]|S[ABCEFLOPSTUVY]|W[^0-9a-zHIKNOQRUWXY])(A[^0-9a-zABEIJLQTVYZ]|C[^0-9a-zBJKNQUVWXYZ]|H[A-Z]|L[^0-9a-zJMOQUYZ]|XX)/IV/(N?BO|B|M)/(A(E|W)?|E|W)/[0-9]{3}/[0-9]{3}/[0-9]{4}(N|S)[0-9]{5}(E|W)[0-9]{3}</.*>')
+
     if regex.search(source) != None:
         return True
     else:
@@ -14,27 +15,40 @@ def validate(source):
 
 def extract(source):
     notam_list = []
+
     temp_file0 = open('~temp0.txt', 'w+')
     temp_file1 = open('~temp1.txt', 'w+')
+
     temp_file0.write(re.sub('<.*?>', '', source))
     temp_file0.seek(0)
+
     line0 = temp_file0.readline()
+
     regex = re.compile('[QABCDEFG]\) ')
+
     while line0 != '':
         if regex.match(line0):
             temp_file1.write(line0.strip() + '\n')
+
             if line0.startswith('E) '):
                 line1 = temp_file0.readline()
+
                 while line1 != '\n':
                     temp_file1.write(line1.strip() + '\n')
                     line1 = temp_file0.readline()
+
                 temp_file1.write('\n')
+
         line0 = temp_file0.readline()
+
     temp_file1.seek(0)
+
     notam = ''
     line = temp_file1.readline()
+
     if temp_file1.readline() == '':
         notam_list.append(line)
+
     if os.name == 'posix':
         while line != '':
             if line != '\n':
@@ -42,16 +56,22 @@ def extract(source):
             else:
                 notam_list.append(notam)
                 notam = ''
+
             line = temp_file1.readline()
+
     elif os.name == 'nt':
         while line != '':
             if line.startswith('Q) '):
                 notam_list.append(line)
+
             line = temp_file1.readline()
+
     temp_file0.close()
     temp_file1.close()
+
     os.remove('~temp0.txt')
     os.remove('~temp1.txt')
+
     return notam_list
 
 
@@ -65,23 +85,30 @@ def name(path, wild_card):
 def normalize(file_path):
     raw_path = raw(file_path)
     directories = re.sub(r'\\\\', r'\\', raw_path).split('\\')
+
     index = 0
+
     for index in range(len(directories)):
         if directories[index].find(' ') != -1:
             directories[index] = '\"' + directories[index] + '\"'
+
     path = '\\'.join(directories)
+
     return path
 
 
 def raw(text):
     escape_characters = {'\a' : r'\a', '\b' : r'\b', '\c' : r'\c', '\f' : r'\f', '\n' : r'\n', '\r' : r'\r', '\t' : r'\t', '\v' : r'\v', '\\' : r'\\', '\?' : r'\?', '\'' : r'\'', '\"' : r'\"', '\0' : r'\0'}
     raw_text = ''
+
     index = 0
+
     for index in range(len(text)):
         if text[index] in escape_characters:
             raw_text += escape_characters[text[index]]
         else:
             raw_text += text[index]
+
     return raw_text
 
 

@@ -15,17 +15,16 @@ class NotamProcessor(wx.Frame):
         self.richTextCtrlSource = wx.richtext.RichTextCtrl(self, wx.ID_ANY, 'Paste HTML source here...')
 
         self.buttonOK = wx.Button(self, wx.ID_OK)
-        self.buttonOK.Disable()
-
         buttonCancel = wx.Button(self, wx.ID_CANCEL)
         buttonHelp = wx.Button(self, wx.ID_HELP)
 
         subBoxSizer = wx.BoxSizer(wx.HORIZONTAL)
+        boxSizer = wx.BoxSizer(wx.VERTICAL)
+
         subBoxSizer.Add(buttonCancel)
         subBoxSizer.Add(buttonHelp)
         subBoxSizer.Add(self.buttonOK)
 
-        boxSizer = wx.BoxSizer(wx.VERTICAL)
         boxSizer.Add(self.richTextCtrlSource, 1, wx.EXPAND)
         boxSizer.Add(subBoxSizer, 0, wx.ALIGN_RIGHT)
 
@@ -33,10 +32,12 @@ class NotamProcessor(wx.Frame):
 
         self.Bind(wx.richtext.EVT_RICHTEXT_CONTENT_INSERTED, self.OnPaste, self.richTextCtrlSource)
         self.Bind(wx.richtext.EVT_RICHTEXT_CONTENT_DELETED, self.OnPaste, self.richTextCtrlSource)
+
         self.Bind(wx.EVT_BUTTON, self.OnOK, self.buttonOK)
         self.Bind(wx.EVT_BUTTON, self.OnCancel, buttonCancel)
         self.Bind(wx.EVT_BUTTON, self.OnHelp, buttonHelp)
 
+        self.buttonOK.Disable()
         self.Maximize()
         self.Show()
 
@@ -54,24 +55,33 @@ class NotamProcessor(wx.Frame):
 
     def OnHelp(self, event):
         stringMessage = 'Copy and paste the entire HTML source of the web page containing the NOTAMs onto the text field.\n\nThis program only works with Mozilla Firefox.'
+
         messageDialog = wx.MessageDialog(self, stringMessage, 'Help', wx.OK | wx.ICON_INFORMATION)
+
         messageDialog.ShowModal()
         messageDialog.Destroy()
 
 
     def OnOK(self, event):
         singleChoiceList = process.extract(self.richTextCtrlSource.GetValue())
+
         if singleChoiceList:
             singleChoiceDialog = wx.SingleChoiceDialog(self, 'Select a NOTAM to process:', 'NOTAM Selection', singleChoiceList)
+
             if os.name == 'posix':
                 singleChoiceDialog.Maximize()
+
             if singleChoiceDialog.ShowModal() == wx.ID_OK:
                 self.informationList = [singleChoiceDialog.GetStringSelection()]
                 singleChoiceDialog.Destroy()
+
                 informationDialog = InformationDialog(self.informationList)
+
         else:
             stringMessage = 'ERROR: Cannot read source. An incorrectly formatted NOTAM is detected.'
+
             messageDialog = wx.MessageDialog(self, stringMessage, 'Error', wx.OK | wx.ICON_EXCLAMATION)
+
             messageDialog.ShowModal()
             messageDialog.Destroy()
 
@@ -100,25 +110,29 @@ class InformationDialog(wx.Frame):
         buttonOK = wx.Button(self, wx.ID_OK)
 
         subBoxSizer0 = wx.BoxSizer(wx.HORIZONTAL)
+        subBoxSizer1 = wx.BoxSizer(wx.HORIZONTAL)
+        subBoxSizer2 = wx.BoxSizer(wx.HORIZONTAL)
+
+        boxSizer = wx.BoxSizer(wx.VERTICAL)
+
         subBoxSizer0.Add(staticTextDocumentName)
         subBoxSizer0.Add(self.textCtrlDocument)
 
-        subBoxSizer1 = wx.BoxSizer(wx.HORIZONTAL)
         subBoxSizer1.Add(staticTextPlacemarkName)
         subBoxSizer1.Add(self.textCtrlPlacemark)
 
-        subBoxSizer2 = wx.BoxSizer(wx.HORIZONTAL)
         subBoxSizer2.Add(buttonCancel)
         subBoxSizer2.Add(buttonHelp)
         subBoxSizer2.Add(buttonOK)
 
-        boxSizer = wx.BoxSizer(wx.VERTICAL)
         boxSizer.Add(subBoxSizer0)
         boxSizer.Add(staticTextDocumentDescription)
         boxSizer.Add(self.textCtrlMultiDocument, 1, wx.EXPAND)
+
         boxSizer.Add(subBoxSizer1)
         boxSizer.Add(staticTextPlacemarkDescription)
         boxSizer.Add(self.textCtrlMultiPlacemark, 1, wx.EXPAND)
+
         boxSizer.Add(subBoxSizer2, 0, wx.ALIGN_RIGHT)
 
         self.SetSizer(boxSizer)
@@ -137,7 +151,9 @@ class InformationDialog(wx.Frame):
 
     def OnHelp(self, event):
         stringMessage = 'Enter the Document and Placemark names and descriptions you want in the correct text fields.'
+
         messageDialog = wx.MessageDialog(self, stringMessage, 'Help', wx.OK | wx.ICON_INFORMATION)
+
         messageDialog.ShowModal()
         messageDialog.Destroy()
 
@@ -147,20 +163,29 @@ class InformationDialog(wx.Frame):
         self.informationList.append(self.textCtrlMultiDocument.GetValue())
         self.informationList.append(self.textCtrlPlacemark.GetValue())
         self.informationList.append(self.textCtrlMultiPlacemark.GetValue())
+
         saveFileDialog = wx.FileDialog(None, 'Save File Dialog', 'C:\\', 'unnamed', '*.kml', wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR)
+
         if saveFileDialog.ShowModal() == wx.ID_OK:
             if os.name == 'posix':
                 fullPath = process.name(saveFileDialog.GetPath(), saveFileDialog.GetWildcard())
             elif os.name == 'nt':
                 fullPath = saveFileDialog.GetPath()
+
             saveFileDialog.Destroy()
+
             self.informationList.append(fullPath)
             process.generate(self.informationList)
+
             progressDialog = wx.ProgressDialog('Progress', 'Processing. Please wait...', 100, style=(wx.PD_APP_MODAL | wx.PD_AUTO_HIDE | wx.PD_SMOOTH))
+
             for progress in range(100):
                 progressDialog.Update(progress + 1)
+
             progressDialog.Destroy()
+
             confirmationDialog = ConfirmationDialog(fullPath)
+
         self.Destroy()
 
 
@@ -180,10 +205,11 @@ class ConfirmationDialog(wx.Dialog):
         buttonOK = wx.Button(self, wx.ID_OK)
 
         subBoxSizer = wx.BoxSizer(wx.HORIZONTAL)
+        boxSizer = wx.BoxSizer(wx.VERTICAL)
+
         subBoxSizer.Add(buttonHelp)
         subBoxSizer.Add(buttonOK)
 
-        boxSizer = wx.BoxSizer(wx.VERTICAL)
         boxSizer.Add(staticTextConfirmation, 0, wx.ALIGN_CENTER)
         boxSizer.Add(self.checkBoxView)
         boxSizer.Add(self.checkBoxRun)
@@ -201,7 +227,9 @@ class ConfirmationDialog(wx.Dialog):
 
     def OnHelp(self, event):
         stringMessage = 'Tick the correct checkboxes to indicate whether you want to view the generated KML file and/or open it in Google Earth.\n\nFor Windows users: If you choose both options, then you must first close the KML view before the system can run Google Earth.'
+
         messageDialog = wx.MessageDialog(self, stringMessage, 'Help', wx.OK | wx.ICON_INFORMATION)
+
         messageDialog.ShowModal()
 
 
@@ -211,17 +239,22 @@ class ConfirmationDialog(wx.Dialog):
                 os.system('kate ' + self.fullPath)
             elif os.name == 'nt':
                 os.system('notepad.exe ' + self.fullPath)
+
         if self.checkBoxRun.GetValue():
             if os.name == 'posix':
                 os.system('googleearth ' + self.fullPath)
             elif os.name == 'nt':
                 filePath = 'C:\\Program Files\\Google\\Google Earth\\client\\googleearth.exe'
                 commandPath = 'C:\\"Program Files"\Google\\"Google Earth"\\client\googleearth.exe'
+
                 if os.path.exists(filePath):
                     os.system(commandPath + ' ' + process.normalize(self.fullPath))
                 else:
                     stringMessage = 'Google Earth installation not found (C:\Program Files\...).\n\nThe program will now close.'
+
                     messageDialog = wx.MessageDialog(None, stringMessage, 'Error', wx.ICON_EXCLAMATION)
+
                     messageDialog.ShowModal()
                     messageDialog.Destroy()
+
         self.Destroy()

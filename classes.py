@@ -64,6 +64,7 @@ class NOTAM():
 
     def set_notam_lines(self, notam_lines):
         notam_lines_list = notam_lines.split('\n')
+
         for line in notam_lines_list:
             if self.check_q_line(line):
                 self.set_q_line(line)
@@ -77,17 +78,20 @@ class NOTAM():
         end = self.q_line.rfind('/')
         end = self.q_line.rfind('/', 0, end)
         start = self.q_line.rfind('/', 0, end) + 1
+
         return int(self.q_line[start:end])
 
 
     def extract_upper_height_limit(self):
         end = self.q_line.rfind('/')
         start = self.q_line.rfind('/', 0, end) + 1
+
         return int(self.q_line[start:end])
 
 
     def extract_coordinates_string(self):
         index = self.q_line.rfind('/') + 1
+
         return self.q_line[index:]
 
 
@@ -95,48 +99,62 @@ class NOTAM():
         coordinates_substring = coordinates_string[index[0]:index[0] + increment]
         coordinate = int(coordinates_substring)
         index[0] += increment
+
         return coordinate
 
 
     def extract_direction(self, coordinates_string, index):
         direction = coordinates_string[index[0]]
         index[0] += 1
+
         return direction
 
 
     def extract_radius(self, coordinates_string, index):
         coordinates_substring = coordinates_string[index[0]:]
         radius = int(coordinates_substring)
+
         return radius
 
 
     def extract_q_line_info(self, latitude, longitude, radius):
         index = [0]
+
         coordinates_string = self.extract_coordinates_string()
+
         latitude.set_degrees(self.extract_coordinate(coordinates_string, index, 2))
         latitude.set_minutes(self.extract_coordinate(coordinates_string, index, 2))
         latitude.set_direction(self.extract_direction(coordinates_string, index))
+
         longitude.set_degrees(self.extract_coordinate(coordinates_string, index, 3))
         longitude.set_minutes(self.extract_coordinate(coordinates_string, index, 2))
         longitude.set_direction(self.extract_direction(coordinates_string, index))
+
         radius[0] = self.extract_radius(coordinates_string, index)
 
 
     def extract_f_line_info(self, lower_limit, lower_height_limit):
         if self.f_line.find('SFC') != -1 or self.f_line.find('GND') != -1 or self.f_line.find('GRD') != -1:
             lower_limit[0] = 0
+
         elif self.f_line.find('AMSL') != -1:
             index = self.f_line.find(' ') + 1
             length = self.f_line.find('F') - index
+
             line_substring = self.f_line[index:index + length]
             metres = int(line_substring) * FOOT_TO_METRE
+
             lower_limit[0] = metres
+
         elif self.f_line.find('FL') != -1:
             index = self.f_line.find('FL') + 2
             length = len(self.f_line) - index + 1
+
             line_substring = self.f_line[index:index + length]
             flight_level = int(line_substring) * FOOT_TO_METRE * 100
+
             lower_limit[0] = flight_level
+
         elif self.f_line == '':
             altitude = lower_height_limit * FOOT_TO_METRE * 100
             lower_limit[0] = altitude
@@ -145,23 +163,31 @@ class NOTAM():
     def extract_g_line_info(self, deg_dec, upper_height_limit):
         if self.g_line.find('UNL') != -1:
             deg_dec.set_altitude(99999)
+
         elif self.g_line.find('AMSL') != -1:
             index = self.g_line.find(' ') + 1
             length = self.g_line.find('F') - index
+
             line_substring = self.g_line[index:index + length]
             metres = int(line_substring) * FOOT_TO_METRE
+
             deg_dec.set_altitude(metres)
+
         elif self.g_line.find('FL') != -1:
             index = self.g_line.find('FL') + 2
             length = len(self.g_line) - index + 1
+
             line_substring = self.g_line[index:index + length]
             flight_level = int(line_substring) * FOOT_TO_METRE * 100
+
             deg_dec.set_altitude(flight_level)
+
         elif self.g_line == '':
             if upper_height_limit == 999:
                 altitude = 99999
             else:
                 altitude = upper_height_limit * FOOT_TO_METRE * 100
+
             deg_dec.set_altitude(altitude)
 
 
@@ -197,6 +223,7 @@ class DMS():
 
     def convert_coordinate(self):
         deg_dec_coordinate = self.degrees + (self.minutes * 60.0) / 3600.0
+
         if self.direction == 'N' or self.direction == 'E':
             return deg_dec_coordinate
         else:
@@ -350,46 +377,69 @@ class DegDec():
         # s = ellipsoidal distance between the points
 
         angle = math.radians(360 / 20)
+
         a = 6378137.0
         b = 6356752.314
         f = 1 / 298.257223563
+
         phi1 = self.get_latitude()
         lambda1 = self.get_longitude()
+
         alpha1 = 0.0
+
         s = self.get_radius()
+
         tan_U1 = (1 - f) * math.tan(math.radians(phi1))
         sin_U1 = math.sqrt(tan_U1 ** 2 / (tan_U1 ** 2 + 1))
         cos_U1 = 1 / math.sqrt(1 + tan_U1 ** 2)
+
         while alpha1 <= math.radians(360):
             sin_alpha1 = math.sin(alpha1)
             cos_alpha1 = math.cos(alpha1)
+
             sigma1 = math.atan2(tan_U1, cos_alpha1)
+
             sin_alpha = cos_U1 * sin_alpha1
             cos2_alpha = 1 - sin_alpha ** 2
+
             u2 = cos2_alpha * ((a ** 2 - b ** 2) / b ** 2)
+
             A = 1 + (u2 / 16384) * (4096 + u2 * (-768 + u2 * (320 - 175 * u2)))
             B = (u2 / 1024) * (256 + u2 * (-128 + u2 * (74 - 47 * u2)))
+
             sigma = s / (b * A)
             sigma_p = math.radians(360)
             sigma_m_2 = 0.0
+
             while math.fabs(sigma - sigma_p) > 1e-12:
                 sigma_m_2 = sigma1 * 2 + sigma
                 cos_sigma_m_2 = math.cos(sigma_m_2)
+
                 sin_sigma = math.sin(sigma)
                 cos_sigma = math.cos(sigma)
+
                 delta_sigma = B * sin_sigma * (cos_sigma_m_2 + (1 / 4) * B * (cos_sigma * (-1 + 2 * cos_sigma_m_2 ** 2) - (1 / 6) * B * cos_sigma_m_2 * (-3 + 4 * sin_sigma ** 2) * (-3 + 4 * cos_sigma_m_2 ** 2)))
+
                 sigma_p = sigma
                 sigma = (s / (b * A)) + delta_sigma
+
             cos_sigma_m_2 = math.cos(sigma_m_2)
+
             sin_sigma = math.sin(sigma)
             cos_sigma = math.cos(sigma)
+
             phi2 = math.atan2(sin_U1 * cos_sigma + cos_U1 * sin_sigma * cos_alpha1, (1 - f) * math.sqrt(sin_alpha ** 2 + (sin_U1 * sin_sigma - cos_U1 * cos_sigma * cos_alpha1) ** 2))
             phi2 = math.degrees(phi2)
+
             lambda0 = math.atan2(sin_sigma * sin_alpha1, cos_U1 * cos_sigma - sin_U1 * sin_sigma * cos_alpha1)
+
             C = (f / 16) * cos2_alpha * (4 + f * (4 - 3 * cos2_alpha))
             L = lambda0 - (1 - C) * f * sin_alpha * (sigma + C * sin_alpha * (cos_sigma_m_2 + C * cos_sigma * (-1 + 2 * cos_sigma_m_2 ** 2)))
+
             lambda2 = lambda1 + math.degrees(L)
+
             kml_file.print_normal("%s,%s,%s" % (lambda2, phi2, int(round(self.get_altitude()))))
+
             alpha1 += angle
 
 
@@ -500,9 +550,11 @@ class KMLFile():
 
     def print_normal(self, string_line):
         i = 0
+
         while i < self.indent_width:
             self.file.write(' ')
             i += 1
+
         self.file.write(string_line + '\n')
 
 
@@ -518,13 +570,16 @@ class KMLFile():
 
     def create_kml_source(self, document, poly_style, placemark, latitude, longitude, look_at, point_polygon, deg_dec):
         self.print_normal('<kml>')
+
         self.indent('<Document>')
+
         self.indent('<name>%s</name>' % document.get_name())
         self.print_normal('<visibility>%s</visibility>' % document.get_visibility(self))
         self.print_normal('<open>%s</open>' % document.get_open(self))
         self.print_normal('<description>')
         self.indent(document.get_description())
         self.unindent('</description>')
+
         self.print_normal('<Style id="%s">' % poly_style.get_id())
         self.indent('<PolyStyle>')
         self.indent('<color>%s</color>' % poly_style.get_color())
@@ -532,7 +587,9 @@ class KMLFile():
         self.print_normal('<outline>%s</outline>' % poly_style.get_outline(self))
         self.unindent('</PolyStyle>')
         self.unindent('</Style>')
+
         self.print_normal('<Placemark>')
+
         self.indent('<name>%s</name>' % placemark.get_name())
         self.print_normal('<visibility>%s</visibility>' % placemark.get_visibility(self))
         self.print_normal('<description>')
@@ -544,6 +601,7 @@ class KMLFile():
         self.print_normal('radius: %s m' % deg_dec.get_radius())
         self.unindent('</description>')
         self.print_normal('<styleUrl>#%s</styleUrl>' % poly_style.get_id())
+
         self.print_normal('<LookAt>')
         self.indent('<longitude>%s</longitude>' % look_at.get_longitude())
         self.print_normal('<latitude>%s</latitude>' % look_at.get_latitude())
@@ -553,26 +611,36 @@ class KMLFile():
         self.print_normal('<range>%s</range>' % look_at.get_range())
         self.print_normal('<altitudeMode>%s</altitudeMode>' % int(round(look_at.get_altitude())))
         self.unindent('</LookAt>')
+
         self.print_normal('<MultiGeometry>')
+
         self.indent('<Point>')
         self.indent('<extrude>%s</extrude>' % point_polygon.get_extrude(self))
         self.print_normal('<altitudeMode>%s</altitudeMode>' % point_polygon.get_altitude_mode())
         self.print_normal('<coordinates>%s,%s,%s</coordinates>' % (point_polygon.get_longitude(), point_polygon.get_latitude(), int(round(point_polygon.get_altitude()))))
         self.unindent('</Point>')
+
         self.print_normal('<Polygon>')
         self.indent('<extrude>%s</extrude>' % point_polygon.get_extrude(self))
         self.print_normal('<altitudeMode>%s</altitudeMode>' % point_polygon.get_altitude_mode())
         self.print_normal('<outerBoundaryIs>')
         self.indent('<LinearRing>')
         self.indent('<coordinates>')
+
         self.increase_indent()
         deg_dec.calculate_coordinates(self)
+
         self.unindent('</coordinates>')
         self.unindent('</LinearRing>')
         self.unindent('</outerBoundaryIs>')
         self.unindent('</Polygon>')
+
         self.unindent('</MultiGeometry>')
+
         self.unindent('</Placemark>')
+
         self.unindent('</Document>')
+
         self.unindent('</kml>')
+
         self.file.close()
