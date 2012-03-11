@@ -1,0 +1,36 @@
+NOTAM Visualiser
+
+About
+-----
+
+A Notices to Airmen (NOTAM) visualiser. It generates a Keyhole Markup Language (KML) file containing the points and dimensions of the 3D cylinder representing the restricted airspaces described by the NOTAM Q Line input.
+
+Technical Information
+---------------------
+
+This application is programmed in Python and uses the wxPython GUI framework.
+
+Installation
+------------
+
+Python and wxPython must be installed. Google Earth is not required; the application only attempts to automatically open the generated KML file if Google Earth is found in the system.
+
+How to Use
+----------
+
+Run main.py. In the text area that opens up, enter the HTML source of an NATS AIS webpage containing NOTAMs. Select the NOTAM you would like to generate a KML file of.
+
+Notes
+-----
+
+You need to be registered with the NATS AIS website in order to view webpages containing NOTAMs.
+
+Background and History
+----------------------
+
+This application was originally my A2 Computing project. It was built for a specific person and with specific conditions and features. I am currently attempting to make it available for general use, to remove the GUI (though I might make it an available option) and to improve the overall code quality.
+
+Disclaimer
+----------
+
+If you are a pilot, please check with other NOTAM visualisers for their output, not just this one. I am well aware that this application is not as sophisticated (and not as good) as commercial ones and others, and may commit errors and inaccuracies in calculations. 
